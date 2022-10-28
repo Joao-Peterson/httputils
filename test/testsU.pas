@@ -1,5 +1,7 @@
 ﻿unit testsU;
 
+{$I ../modules/dunitx/Source/DUnitX.Stacktrace.inc}
+
 interface
 
 uses
@@ -10,9 +12,56 @@ type
     [TestFixture]
     querystringTestT = class
         [Test]
-        procedure toJsonSimpleTest;
+        [TestCase('Case 1', '../../test-empty.http,../../test-empty.json,true')]
+        [TestCase('Case 2', '../../test-malformed.http,../../test-malformed.json,true')]
+        [TestCase('Case 3', '../../test-random1.http,../../test-random1.json,true')]
+        [TestCase('Case 4', '../../test-random2.http,../../test-random2.json,true')]
+        [TestCase('Case 5', '../../test-random3.http,../../test-random3.json,true')]
+        [TestCase('Case 6', '../../test-full.http,../../test-full.json,true')]
+        [TestCase('Case 7', '../../test-single.http,../../test-single.json,false')]
+        [TestCase('Case 8', '../../test-simple.http,../../test-simple.json,false')]
+        [TestCase('Case 9', '../../test-empty-value.http,../../test-empty-value.json,false')]
+        procedure toJsonTest(querystringFile: string; expectedJsonFile: string; parse: string);
+        
         [Test]
-        procedure percentEncodingTest;
+        [TestCase('Case 1', ':/?#[]@!$&''()*+;=% ,%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25%20,Encoding all URI special chars,true')]
+        procedure percentEncodingTest(input: string; expected: string; msg: string; isuri: string);
+
+        [TestCase('Case 1', '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25%20,:/?#[]@!$&''()*+;=% ,Decoding from all URI special chars,true')]
+        [TestCase('Case 2', '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25+,:/?#[]@!$&''()*+;=% ,Decoding from all URI special chars with + symbol for application/x-www-form-urlencoded,false')]
+        procedure percentDecodingTest(input: string; expected: string; msg: string; isuri: string);
+
+        [Test]
+        [TestCase('Case null 1', 'null,0')]
+        [TestCase('Case null 2', ',0')]
+        [TestCase('Case bool 1', 'true,1')]
+        [TestCase('Case bool 2', 'false,1')]
+        [TestCase('Case integer 1', '+2132,2')]
+        [TestCase('Case integer 2', '-242421,2')]
+        [TestCase('Case integer 3', '0,2')]
+        [TestCase('Case integer 4', '-0,2')]
+        [TestCase('Case integer 5', '+0,2')]
+        [TestCase('Case integer 6', '2147483647,2')]
+        [TestCase('Case integer 7', '2147483648,4')]
+        [TestCase('Case float 1', '-0.3E+4,3')]
+        [TestCase('Case float 2', '-435.3324E-12,3')]
+        [TestCase('Case float 3', '-.3545e+32,3')]
+        [TestCase('Case float 4', '+.3545e-32,3')]
+        [TestCase('Case float 5', '+059094.3545e-32,3')]
+        [TestCase('Case float 6', '+05903545e-32,3')]
+        [TestCase('Case float 7', '0.432,3')]
+        [TestCase('Case float 8', '.432,3')]
+        [TestCase('Case float 9', '0.432e454,3')]
+        [TestCase('Case float 10', '0.432e+4,3')]
+        [TestCase('Case float 11', '.432E54,3')]
+        [TestCase('Case string 1', '0.432+454,4')]
+        [TestCase('Case string 2', '.,4')]
+        [TestCase('Case string 3', '-,4')]
+        [TestCase('Case string 4', '+,4')]
+        [TestCase('Case string 5', '}1G.t8;T_F$WSH*#j*@[>jw Z#=Vrv&UfR8&36O0Z~%a[xC1#Y,4')]
+        [TestCase('Case string 6', '%Gb#21HIX%ZkKfEe8Kk_kVcN:d!"bJLZ\+gmc)=)U!2{mO#ES.,4')]
+        [TestCase('Case string 7', '3P7RhyY=*2n "^}tn|$h0ZPx@Z8yo0Y;*Kn!|)b|5G^J}q4Y/=,4')]
+        procedure parseJsonValueTest(value: string; tp: string);
     end;
 
 implementation
@@ -25,88 +74,64 @@ uses
     System.SysUtils,
     System.IOUtils;
 
-procedure querystringTestT.toJsonSimpleTest;
+procedure querystringTestT.toJsonTest(querystringFile: string; expectedJsonFile: string; parse: string);
 var
-    testFiles: TStringList;
-    testRes: TStringList;
     qs: querystringT;
     query: string;
     jsonRes: string;
     json: string;
     i: integer;
 begin
-    testFiles := TStringList.Create();
-    testRes := TStringList.Create();
 
-    testFiles.Add('../../test-single.http');
-    testFiles.Add('../../test-empty.http');
-    testFiles.Add('../../test-empty-value.http');
-    testFiles.Add('../../test-simple.http');
-    testFiles.Add('../../test-malformed.http');
-    testFiles.Add('../../test-full.http');
-    testFiles.Add('../../test-random1.http');
-    testFiles.Add('../../test-random2.http');
-    testFiles.Add('../../test-random3.http');
-    testRes.Add('../../test-single.json');
-    testRes.Add('../../test-empty.json');
-    testRes.Add('../../test-empty-value.json');
-    testRes.Add('../../test-simple.json');
-    testRes.Add('../../test-malformed.json');
-    testRes.Add('../../test-full.json');
-    testRes.Add('../../test-random1.json');
-    testRes.Add('../../test-random2.json');
-    testRes.Add('../../test-random3.json');
+    var parsebool: boolean := parse.compareTo('true') = 0;
 
-    for i := 0 to testFiles.Count - 1 do
-    begin
-        try
-            query := testFiles.Strings[i];
-            query := TFile.ReadAllText(testFiles.Strings[i]);
-            jsonRes := TFile.ReadAllText(testRes.Strings[i]);
+    try
+        query := TFile.ReadAllText(querystringFile);
+        jsonRes := TFile.ReadAllText(expectedJsonFile);
 
-            qs := querystringT.Create(query);
+        qs := querystringT.Create(query);
 
-            json := qs.toJson();
+        json := qs.toJson(parsebool,parsebool,parsebool,parsebool);
 
-            Assert.AreEqual(jsonRes, json, testFiles.Strings[i]);
-            
-            qs.Destroy();
-        except
-            on E: exception do
-            begin
-                raise Exception.Create('Error toJson() for file: ' + testFiles.Strings[i] + '. Exception: ' + E.Message);
-            end;
+        Assert.AreEqual(jsonRes, json);
+        
+        qs.Destroy();
+    except
+        on E: exception do
+        begin
+            raise Exception.Create('Error toJson() for file: ' + querystringFile + '. Exception: ' + E.Message);
         end;
     end;
-
-    testFiles.Destroy();
-    testRes.Destroy();
 end;
 
-procedure querystringTestT.percentEncodingTest;
+procedure querystringTestT.percentEncodingTest(input: string; expected: string; msg: string; isuri: string);
 begin
+    var uri: boolean := isuri.compareTo('true') = 0; 
     try
-        Assert.AreEqual(
-            '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D%25%20',
-            querystringT.percentEncode(':/?#[]@!$&''()*+,;=% '),
-            'Encoding all URI special chars'
-        );
-
-        Assert.AreEqual(
-            ':/?#[]@!$&''()*+,;=% ',
-            querystringT.percentDecode('%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D%25%20'),
-            'Decoding from all URI special chars'
-        );
-
-        Assert.AreEqual(
-            ':/?#[]@!$&''()*+,;=% ',
-            querystringT.percentDecode('%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D%25+', false),
-            'Decoding from all URI special chars with + symbol for application/x-www-form-urlencoded'
-        );
-
+        Assert.AreEqual(expected, querystringT.percentEncode(input, uri),msg);
     except
         on E: exception do raise;
     end;
+end;
+
+procedure querystringTestT.percentDecodingTest(input: string; expected: string; msg: string; isuri: string);
+begin
+    var uri: boolean := isuri.compareTo('true') = 0; 
+    try
+        Assert.AreEqual(expected, querystringT.percentDecode(input, uri),msg);
+    except
+        on E: exception do raise;
+    end;
+end;
+
+procedure querystringTestT.parseJsonValueTest(value: string; tp: string);
+begin
+    var res: jsonValueT;
+    var resEx: jsonValueTypeEnum := jsonValueTypeEnum(strtoint(tp));
+
+    res := querystringT.parseJsonValue(value);
+
+    Assert.AreEqual(resEx, res.jsonType);
 end;
 
 //procedure querystringTestT.URIBuilderTest;
