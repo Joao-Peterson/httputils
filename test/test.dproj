@@ -69,6 +69,7 @@
         <DCC_K>false</DCC_K>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>test</SanitizedProjectName>
+        <DCC_UnitSearchPath>modules\.dcp;modules\.dcu;modules;modules\dunitx\Examples;modules\dunitx\Expert;modules\dunitx\Source;modules\dunitx\Tests;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;IndyIPCommon;RESTComponents;bindcompdbx;DBXInterBaseDriver;IndyIPServer;IndySystem;tethering;fmxFireDAC;FireDAC;bindcompfmx;FireDACSqliteDriver;soaprtl;DbxCommonDriver;fmx;FireDACIBDriver;xmlrtl;soapmidas;rtl;DbxClientDriver;CustomIPTransport;dbexpress;IndyCore;bindcomp;dsnap;FireDACCommon;IndyIPClient;RESTBackendComponents;soapserver;dbxcds;bindengine;CloudService;dsnapxml;dbrtl;IndyProtocols;FireDACCommonDriver;inet;$(DCC_UsePackage)</DCC_UsePackage>
@@ -152,55 +153,59 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="..\src\querystringU.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DunitX.ConsoleWriter.Base.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.DUnitCompatibility.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.InternalInterfaces.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Loggers.Console.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Loggers.Text.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Loggers.XML.NUnit.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Loggers.XML.xUnit.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Test.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.TestFixture.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.TestFramework.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.RunResults.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Utils.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Utils.XML.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Windows.Console.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.StackTrace.EurekaLog7.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.FixtureResult.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Loggers.Null.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.CommandLine.OptionDef.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.CommandLine.Parser.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Timeout.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Assert.Ex.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Assert.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Attributes.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.ComparableFormat.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Exceptions.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Extensibility.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Filters.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Generics.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Types.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.ResStrs.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Helpers.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.InternalDataProvider.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Banner.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.CommandLine.Options.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.FilterBuilder.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.FixtureProviderPlugin.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.IoC.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.MemoryLeakMonitor.Default.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.OptionsDefinition.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.TestDataProvider.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.TestResult.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.TestRunner.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.WeakReference.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Extensibility.PluginManager.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.CategoryExpression.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.TestNameParser.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.Constants.pas"/>
-        <DCCReference Include="..\modules\dunitx\Source\DUnitX.AutoDetect.Console.pas"/>
         <DCCReference Include="testsU.pas"/>
+        <DCCReference Include="..\src\httpUtilsU.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Assert.Ex.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Assert.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Attributes.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.AutoDetect.Console.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Banner.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.CategoryExpression.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.CommandLine.OptionDef.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.CommandLine.Options.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.CommandLine.Parser.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.ComparableFormat.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DunitX.ConsoleWriter.Base.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Constants.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.DUnitCompatibility.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Exceptions.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Extensibility.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Extensibility.PluginManager.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.FilterBuilder.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Filters.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.FixtureProviderPlugin.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.FixtureResult.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Generics.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Helpers.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.InternalDataProvider.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.InternalInterfaces.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.IoC.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Loggers.Console.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Loggers.Null.pas">
+            <ModuleName>DUnitX.Loggers.Null.pas</ModuleName>
+        </DCCReference>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Loggers.Text.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Loggers.XML.NUnit.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Loggers.XML.xUnit.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.MemoryLeakMonitor.Default.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.OptionsDefinition.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.ResStrs.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.RunResults.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.StackTrace.EurekaLog7.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Test.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.TestDataProvider.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.TestFixture.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.TestFramework.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.TestNameParser.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.TestResult.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.TestRunner.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Timeout.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Types.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Utils.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Utils.XML.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.WeakReference.pas"/>
+        <DCCReference Include="modules\dunitx\Source\DUnitX.Windows.Console.pas"/>
+        <None Include="modules\dunitx\Source\DUnitX.inc"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -223,6 +228,12 @@
                 </Source>
             </Delphi.Personality>
             <Deployment Version="3">
+                <DeployFile LocalName="modules\dunitx\Source\DUnitX.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
                         <Overwrite>true</Overwrite>

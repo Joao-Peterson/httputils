@@ -1,14 +1,5 @@
 {
 	"hash": "2087a5e3e7f5ca7996397928bb30fa44",
 	"updated": "2022-10-16T00:27:08.7990695-03:00",
-	"installedModules": {
-		"https://github.com/joao-peterson/dunitx": {
-			"name": "dunitx",
-			"version": "master",
-			"hash": "7417e7a61d8e151a1d627fc19ee6a512",
-			"artifacts": {},
-			"failed": false,
-			"changed": false
-		}
-	}
+	"installedModules": {}
 }

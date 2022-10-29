@@ -5,7 +5,5 @@
 	"homepage": "",
 	"mainsrc": "./src",
 	"projects": [],
-	"dependencies": {
-		"https://github.com/joao-peterson/dunitx": ">0.0.0"
-	}
+	"dependencies": {}
 }

@@ -1,0 +1,11 @@
+{
+	"name": "test",
+	"description": "",
+	"version": "1.0.0",
+	"homepage": "",
+	"mainsrc": "./",
+	"projects": [],
+	"dependencies": {
+		"https://github.com/joao-peterson/dunitx": "^v0.3.1"
+	}
+}
