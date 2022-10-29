@@ -36,7 +36,7 @@ Utility for handling http querystrings and other http related stuff such as:
 Just use the following command:
 
 ```console
-$ boss install lab.srssistemas.com/peterson/querystring
+$ boss install github.com/Joao-Peterson/httputils
 ```
 
 If asked for permission, you can login with your gitlab credentials. **(must be done in powershell or cmd with administrator mode)**
