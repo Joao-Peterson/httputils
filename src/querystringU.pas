@@ -3,63 +3,48 @@
 interface
 
 uses
-    JSON,
     System.Classes,
     System.Generics.Collections,
-    JSON.Writers;
+    System.JSON,
+    System.JSON.Writers,
+    System.JSON.Readers,
+    System.JSON.Builders;
 
 type
 
-    // enumerator that represents a type of value a json pair can hold 
-    jsonValueTypeEnum = (
-        jsonNull        = 0,
-        jsonBoolean     = 1,
-        jsonInteger     = 2,
-        jsonFloat       = 3,
-        jsonString      = 4
-    );
-
-    jsonValueT = record
-        case jsonType: jsonValueTypeEnum of
-            jsonNull:       (nullValue:     String[255]);
-            jsonBoolean:    (booleanValue:  Boolean); 
-            jsonInteger:    (integerValue:  Integer);
-            jsonFloat:      (floatValue:    Extended);     
-            jsonString:     (stringValue:   String[255]);     
-    end;
-
     // class util that can parse/serialize to and from querystring (percent-encoded) and json
     querystringT = class
+        // create new instance. Use the 'parse*()' calls tomoperate on some types of data
+        constructor Create();
+
         // create querystring from a string, generally a http request body of content type application/x-www-form-urlencoded
-        constructor Create(querystring: string); overload;
+        procedure parseQuerystring(querystring: string);
         // create a querystring from a json object
-        constructor Create(json: TJSONObject); overload;
+        procedure parseJsonObject(json: TJSONObject; parseNull: boolean = true);
+        // create a querystring from a json string
+        procedure parseJson(json: string; parseNull: boolean = true);
 
         // serializes querystring to json format
+        function toJsonObject(parseBool: Boolean = true; parseNull: Boolean = true; parseFloats: Boolean = true; parseIntegers: Boolean = true): TJSONObject;
         function toJson(parseBool: Boolean = true; parseNull: Boolean = true; parseFloats: Boolean = true; parseIntegers: Boolean = true): string;
         // serializes querystring to string list, for easier handling like: list.Values['valueName']
-//        function toQuerystring(): TStringList;
-
-        // encode string to percentencoding used in application/x-www-form-urlencoded request
-        class function percentEncode(str: string; isUri: boolean=true): string;
-        // decode string from percentencoding used in application/x-www-form-urlencoded request
-        class function percentDecode(str: string; isUri: boolean=true): string;
-
-        // build a percent encoded url based on the rfc3986 spec. URI Regex: ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?    $7 are all the params, $4 is the host, $5 the routes, $2 the protocol
-//        function URLBuilder(host: string; routes: TStringList; params: TStringList);
-
-        // parses a json value from a string to the correct type
-        class function parseJsonValue(value: string; parseBool: Boolean = true; parseNull: Boolean = true; parseFloats: Boolean = true; parseIntegers: Boolean = true): jsonValueT;
+        function toQuerystringList(): TStringList;
+        // serializes querystring to a single string with optional percent encoding
+        function toQuerystring(encode: Boolean = true): string;
 
         // destroy
         destructor Destroy(); override;
+
     private
+        // querystring pair
         qsKeys: TList<string>;
         qsValues: TList<string>;
-        json: TJSONObject;
 
         // writes the correct type of json value from a string
         class procedure writeJsonValue(writter: TJsonWriter; value: string; parseBool: Boolean; parseNull: Boolean; parseFloats: Boolean; parseIntegers: Boolean);
+
+        // recursive function to read json
+        class procedure jsonToQuerystring(ite: TJSONIterator; keys: TList<string>; values: TList<string>; parseNull: boolean);
     end;
 
 
@@ -67,26 +52,174 @@ implementation
 
 uses
     System.RegularExpressions,
-    System.SysUtils;
+    System.SysUtils,
+    System.Character,
+    System.JSON.Types,
+    httpUtilsU;
 
-function querystringT.toJson(parseBool: Boolean; parseNull: Boolean; parseFloats: Boolean; parseIntegers: Boolean): string;
-var
-    writter: TJsonObjectWriter;
-    parents: TArray<string>;
-    curParents: TArray<string>;
-    curParentsSize: integer;
-    buffer: string;
-    parentsSize: integer;
+// ------------------------------------------------- Parse methods ---------------------------------------------------------
+
+procedure querystringT.parseQuerystring(querystring: string);
 begin
-    if self.json <> nil then
+    if querystring.IsEmpty() then
     begin
-        Result := self.json.ToJSON();
-        exit();
+        raise Exception.Create('querystring parameter was empty');
+        exit;
     end;
 
-    curParents := nil;
-    curParentsSize := 0;
-    writter := TJsonObjectWriter.Create();
+    var input: string;
+    try
+        input := httpUtilsT.percentDecode(querystring, false);                      // decode just to be sure
+    except
+      on E: Exception do raise;
+    end;
+
+    var sep: integer := Pos('&', input);                                            // search separator
+    if sep = 0 then sep := Length(input)+1;
+
+    while true do                                                                   // while the there are no more '&' separators
+    begin
+        if sep <> 1 then                                                            // if single '&' then just wait to find another one
+        begin
+            var pair: string := Copy(input, 0, sep-1);                              // copy key value pair
+            var key: string;
+            var value: string;
+
+            var equal: integer := Pos('=', pair);                                   // find '=' separator
+            if equal = 0 then                                                       // empty value
+            begin
+                self.qsKeys.Add(pair);
+                self.qsValues.Add('');
+            end
+            else
+            begin                                                                   // key and value
+                key := Copy(pair, 0, equal-1);
+                value := Copy(pair, equal+1, Length(pair)-equal);
+                self.qsKeys.Add(key);
+                self.qsValues.Add(value);
+            end;
+        end;
+
+        Delete(input, 1, sep);                                                      // remove just read key/value pair from input
+        sep := Pos('&', input);                                                     // search next separator
+        if sep = 0 then                                                             // on last pair or end
+        begin
+           if input.IsEmpty then break;                                             // on end
+           sep := Length(input)+1;                                                  // if just on last set sep to the end
+        end
+    end;
+end;
+
+procedure querystringT.parseJson(json: string; parseNull: boolean);
+begin
+    if json.IsEmpty() then
+    begin
+        raise Exception.Create('json parameter was empty');
+        exit;
+    end;
+
+    try
+        var obj: TJSONObject := TJSONObject.ParseJSONValue(json) as TJSONObject;
+        parseJsonObject(obj, parseNull);
+    except
+        on E: Exception do raise;
+    end;
+end;
+
+procedure querystringT.parseJsonObject(json: TJSONObject; parseNull: boolean);
+begin
+    if((json = nil) or (json.Count = 0)) then 
+    begin
+        raise Exception.Create('json object passed was empty or nil');;
+        exit;
+    end;
+
+    var reader: TJsonObjectReader := TJsonObjectReader.Create(json);
+    var ite: TJSONIterator := TJSONIterator.Create(reader);
+    jsonToQuerystring(ite, qsKeys, qsValues, parseNull);
+
+    ite.Destroy();
+    reader.Destroy();
+end;
+
+// ------------------------------------------------- To* methods -----------------------------------------------------------
+
+function querystringT.toQuerystring(encode: Boolean): string;
+begin
+    if((self.qsKeys = nil) or ((self.qsKeys <> nil) and (self.qsKeys.Count = 0))) then
+    begin
+        raise Exception.Create('querystring is empty or nil');
+        exit;
+    end;
+
+    try
+        var i: integer;
+        var buffer: string := '';
+
+        for i := 0 to qsKeys.Count-1 do                                             // for every pair
+        begin
+            if i <> 0 then                                                          // add ampersand '&' for every element except the first one
+                buffer := buffer + '&';
+
+            if encode then                                                          // if encoded needed
+            begin
+                buffer := buffer +                                                  // add pair
+                httpUtilsT.percentEncode(qsKeys.Items[i],false) + '=' +     
+                httpUtilsT.percentEncode(qsValues.Items[i],false);           
+            end
+            else
+            begin
+                buffer := buffer + qsKeys.Items[i] + '=' + qsValues.Items[i];       // add pair
+            end;
+        end;
+
+        Result := buffer;
+    except
+        on E: Exception do raise;
+    end;
+end;
+
+function querystringT.toQuerystringList(): TStringList;
+begin
+    if((self.qsKeys = nil) or ((self.qsKeys <> nil) and (self.qsKeys.Count = 0))) then
+    begin
+        raise Exception.Create('querystring is empty or nil');
+        exit;
+    end;
+
+    var qs: TStringList := TStringList.Create();
+
+    var i: integer := 0;
+    for i := 0 to qsKeys.Count-1 do
+    begin
+        qs.AddPair(qsKeys.Items[i], qsValues.Items[i]);
+    end;
+    
+    Result := qs;
+end;
+
+function querystringT.toJson(parseBool: Boolean; parseNull: Boolean; parseFloats: Boolean; parseIntegers: Boolean): string;
+begin
+    try
+        var json := toJsonObject(parseBool, parseNull, parseFloats, parseIntegers);
+        Result := json.ToJSON();
+        json.Destroy();
+    except
+        on E: Exception do raise;
+    end;
+end;
+
+function querystringT.toJsonObject(parseBool: Boolean; parseNull: Boolean; parseFloats: Boolean; parseIntegers: Boolean): TJSONObject;
+begin
+    if((self.qsKeys = nil) or ((self.qsKeys <> nil) and (self.qsKeys.Count = 0))) then
+    begin
+        raise Exception.Create('querystring is empty or nil');
+        exit;
+    end;
+
+    var curParents: TArray<string> := nil;
+    var curParentsSize: integer := 0;
+    var writter: TJsonObjectWriter := TJsonObjectWriter.Create();
     writter.WriteStartObject();
 
     // for every path/key=value pair
@@ -94,15 +227,12 @@ begin
     var i: integer;
     for i := 0 to qsKeys.Count-1 do
     begin
-        buffer := TRegEx.Replace(qsKeys.Items[i], '\]\[', '[');
-        buffer := TRegEx.Replace(buffer, '\]', '');
-        parents := TRegEx.Split(buffer, '\[');
-        parentsSize := Length(parents);
+        var parents: TArray<string> := httpUtilsT.bracketsSplit(qsKeys.Items[i]);   // get parents from querystring name
+        var parentsSize: integer := Length(parents);
 
         if parentsSize <= 0 then
         begin
             continue;
-//            raise Exception.Create('Couldn''t parse querystring value. Value index: [' + IntToStr(i) + ']');
         end;
 
         // if parentless value
@@ -170,307 +300,94 @@ begin
     end;
 
     writter.WriteEndObject();
-    Result := writter.JSON.ToJSON();
+    Result := writter.JSON.Clone() as TJSONObject;
     writter.Destroy();
 end;
 
+// ------------------------------------------------- Private methods -------------------------------------------------------
+
 class procedure querystringT.writeJsonValue(writter: TJsonWriter; value: string; parseBool: Boolean; parseNull: Boolean; parseFloats: Boolean; parseIntegers: Boolean);
 begin
-    if (value.IsEmpty() and parseNull) then                                         // null
-        writter.WriteNull()
+    try
+        var parsed: jsonValueT := httpUtilsT.parseJsonValue(value, parseBool, parseNull, parseFloats, parseIntegers);
 
-    else if ((value.CompareTo('null') = 0) and parseNull) then                      // null, variation
-        writter.WriteNull
-
-    else if ((value.CompareTo('true') = 0) and parseBool) then                      // true
-        writter.WriteValue(true)
-
-    else if ((value.CompareTo('false') = 0) and parseBool) then                     // false
-        writter.WriteValue(false)
-
-    else if                                                                         // integer
-        ((TRegEx.Match(value, '[-+]?\d+').Length = 
-        value.Length)
-        and parseIntegers)
-    then 
-    begin
-        try
-            var num: Integer := StrToInt(value);                                    // if can parse
-            writter.WriteValue(num);                                                // as integer
-        except
-            on E: Exception do
-            begin
-                writter.WriteValue(value);                                          // as string
-            end;
-        end;
-    end
-    else if                                                                         // float 
-        ((TRegEx.Match(value, '[-+]?\d*\.?\d+([eE][-+]?\d+)?').Length = 
-        value.Length)
-        and parseFloats)
-    then 
-    begin
-        try
-            var num: Extended := StrToFloat(                                        // if can parse
-                value, 
-                TFormatSettings.Create('en-US')
-            );
-            writter.WriteValue(num);                                                // as Extended
-        except
-            on E: Exception do
-            begin
-                writter.WriteValue(value);                                          // as String
-            end;
-        end;
-    end
-    else
-        writter.WriteValue(value);                                                  // string
+        case parsed.jsonType of 
+            jsonNull: writter.WriteNull();        
+            jsonBoolean: writter.WriteValue(parsed.booleanValue);     
+            jsonInteger: writter.WriteValue(parsed.integerValue);     
+            jsonFloat: writter.WriteValue(parsed.floatValue);       
+            jsonString: writter.WriteValue(parsed.stringValue);
+        end;     
+    except
+        on E: Exception do raise;
+    end;
 end;
 
-class function querystringT.percentEncode(str: string; isUri: boolean): string;
-var
-  i: integer;
-  en: string;
+class procedure querystringT.jsonToQuerystring(ite: TJSONIterator; keys: TList<string>; values: TList<string>; parseNull: boolean);
 begin
-    for i := 0 to str.Length-1 do                                                   // for every char
+    while true do                                                                   // run trough all json tokens
     begin
-        case str.Chars[i] of                                                        // encode
-            ':': en := en + '%3A';
-            '/': en := en + '%2F';
-            '?': en := en + '%3F';
-            '#': en := en + '%23';
-            '[': en := en + '%5B';
-            ']': en := en + '%5D';
-            '@': en := en + '%40';
-            '!': en := en + '%21';
-            '$': en := en + '%24';
-            '&': en := en + '%26';
-            '''': en := en + '%27';
-            '(': en := en + '%28';
-            ')': en := en + '%29';
-            '*': en := en + '%2A';
-            '+': en := en + '%2B';
-            ',': en := en + '%2C';
-            ';': en := en + '%3B';
-            '=': en := en + '%3D';
-            '%': en := en + '%25';
-            ' ': if isUri then en := en + '%20' else en := en + '+';                // if not "uri" then encode space as '+'
-            else en := en + str.Chars[i];                                           // on any other char just append
+        if(ite.Next() = false) then                                                 // check for array/object end
+        begin
+            if(ite.Depth = 0) then break;                                           // end of the json 
+
+            ite.Return();                                                           // else just go up to parent
+            continue;                                                               // and try again
+        end;
+
+        case ite.&Type of                                                           // we only care about value tokens for the querystring formation
+            TJsonToken.StartObject: ite.Recurse();                                  // on object or array, recurse inside
+            TJsonToken.StartArray:  ite.Recurse(); 
+
+            TJsonToken.Integer:
+            begin
+                keys.Add(httpUtilsT.pointsToBrackets(ite.GetPath(0)));
+                values.Add(IntToStr(ite.AsInteger));  
+            end;
+
+            TJsonToken.Float:
+            begin
+                keys.Add(httpUtilsT.pointsToBrackets(ite.GetPath(0)));
+                values.Add(FloatToStr(ite.AsExtended, TFormatSettings.Create('en-US')));  
+            end;
+
+            TJsonToken.&String:
+            begin
+                keys.Add(httpUtilsT.pointsToBrackets(ite.GetPath(0)));
+                values.Add(ite.AsString);  
+            end;
+
+            TJsonToken.Boolean:
+            begin
+                keys.Add(httpUtilsT.pointsToBrackets(ite.GetPath(0)));
+                values.Add(LowerCase(BoolToStr(ite.AsBoolean, true)));  
+            end;
+
+            TJsonToken.Null:
+            begin
+                keys.Add(httpUtilsT.pointsToBrackets(ite.GetPath(0)));
+                if parseNull then
+                    values.Add('null')
+                else   
+                    values.Add('');
+            end;
         end;
     end;
-
-    Result := en;
 end;
 
-class function querystringT.percentDecode(str: string; isUri: boolean): string;
-var
-  i: integer;
-  code: integer;
-  de: string;
-begin
-    i := 0;
-    while i <= str.Length-1 do                                                      // for every char
-    begin
-        if str.Chars[i] = '%' then                                                  // on encoded char
-        begin
-            try
-                code := StrToInt('$' + str.Substring(i+1, 2));                      // try forming hexadecimal
-            except
-                on E: exception do
-                begin
-                    de := de + str.Chars[i];                                        // just apend the '%' if code was invalid
-                    i := i + 1;                                                     // in this case just jump one forwards and continue
-                    continue;
-                end;
-            end;
+// ------------------------------------------------- Create and destroy ----------------------------------------------------
 
-            case code of                                                            // decode from hex
-                $3A: de := de + ':';
-                $2F: de := de + '/';
-                $3F: de := de + '?';
-                $23: de := de + '#';
-                $5B: de := de + '[';
-                $5D: de := de + ']';
-                $40: de := de + '@';
-                $21: de := de + '!';
-                $24: de := de + '$';
-                $26: de := de + '&';
-                $27: de := de + '''';
-                $28: de := de + '(';
-                $29: de := de + ')';
-                $2A: de := de + '*';
-                $2B: de := de + '+';
-                $2C: de := de + ',';
-                $3B: de := de + ';';
-                $3D: de := de + '=';
-                $25: de := de + '%';
-                $20: de := de + ' ';
-            end;
-
-            i := i + 2;                                                             // jump over the code chars
-        end 
-        else if((not isUri) and (str.Chars[i] = '+'))then                           // if '+'
-        begin
-            de := de + ' ';
-        end
-        else
-        begin                                                                       // on any char
-            de := de + str.Chars[i];
-        end;
-
-        i := i + 1;
-    end;
-
-    Result := de;
-end;
-
-constructor querystringT.Create(querystring: string);
+constructor querystringT.Create();
 begin
     inherited Create();
-
     self.qsKeys := TList<string>.Create();
     self.qsValues := TList<string>.Create();
-    if querystring.IsEmpty() then exit;
-
-    var input: string;
-    try
-        input := percentDecode(querystring, false);                                 // decode just to be sure
-    except
-      on E: Exception do raise;
-    end;
-
-    var sep: integer := Pos('&', input);                                            // search separator
-    if sep = 0 then sep := Length(input)+1;
-
-    while true do                                                                   // while the there are no more '&' separators
-    begin
-        if sep <> 1 then                                                            // if single '&' then just wait to find another one
-        begin
-            var pair: string := Copy(input, 0, sep-1);                              // copy key value pair
-            var key: string;
-            var value: string;
-
-            var equal: integer := Pos('=', pair);                                   // find '=' separator
-            if equal = 0 then                                                       // empty value
-            begin
-                self.qsKeys.Add(pair);
-                self.qsValues.Add('');
-            end
-            else
-            begin                                                                   // key and value
-                key := Copy(pair, 0, equal-1);
-                value := Copy(pair, equal+1, Length(pair)-equal);
-                self.qsKeys.Add(key);
-                self.qsValues.Add(value);
-            end;
-        end;
-
-        Delete(input, 1, sep);                                                      // remove just read key/value pair from input
-        sep := Pos('&', input);                                                     // search next separator
-        if sep = 0 then                                                             // on last pair or end
-        begin
-           if input.IsEmpty then break;                                             // on end
-           sep := Length(input)+1;                                                  // if just on last set sep to the end
-        end
-    end;
-
-    self.json := nil;
-end;
-
-class function querystringT.parseJsonValue(value: string; parseBool: Boolean; parseNull: Boolean; parseFloats: Boolean; parseIntegers: Boolean): jsonValueT;
-begin
-    var union: jsonValueT;
-
-    if (value.IsEmpty() and parseNull) then                                         // null
-    begin
-        union.jsonType := jsonNull;
-        union.nullValue := '';
-    end
-
-    else if ((value.CompareTo('null') = 0) and parseNull) then                      // null, variation
-    begin
-        union.jsonType := jsonNull;
-        union.nullValue := '';
-    end
-
-    else if ((value.CompareTo('true') = 0) and parseBool) then                      // true
-    begin
-        union.jsonType := jsonBoolean;
-        union.booleanValue := true;
-    end
-
-    else if ((value.CompareTo('false') = 0) and parseBool) then                     // false
-    begin
-        union.jsonType := jsonBoolean;
-        union.booleanValue := false;
-    end
-
-    else                                                                            // integer, float, string
-    begin
-        var resInt: TMatch;
-        var resFloat: TMatch;
-
-        if parseIntegers then
-            resInt := TRegEx.Match(value, '[-+]?\d+');
-
-        if parseIntegers then
-            resFloat := TRegEx.Match(value, '[-+]?\d*\.?\d+([eE][-+]?\d+)?');
-
-        if(resInt.Success and (resInt.Length = value.Length)) then                    // integer
-        begin
-            try
-                var num: Integer := StrToInt(value);                                // if can parse
-                union.jsonType := jsonInteger;
-                union.integerValue := num;
-            except
-                on E: Exception do
-                begin
-                    union.jsonType := jsonString;
-                    union.stringValue := value;
-                end;
-            end;
-        end
-        else if(resFloat.Success and (resFloat.Length = value.Length)) then           // integer
-        begin
-            try
-                var num: Extended := StrToFloat(                                    // if can parse
-                    value, 
-                    TFormatSettings.Create('en-US')
-                );
-                
-                union.jsonType := jsonFloat;    
-                union.floatValue := num;
-            except
-                on E: Exception do
-                begin
-                    union.jsonType := jsonString;
-                    union.stringValue := value;
-                end;
-            end;
-        end
-        else
-        begin                                                                       // string
-            union.jsonType := jsonString;
-            union.stringValue := value;
-        end;
-    end;
-
-    Result := union;
-end;
-
-constructor querystringT.Create(json: TJSONObject);
-begin
-    inherited Create();
-    qsKeys := nil;
-    qsValues := nil;
-    self.json := json;
 end;
 
 destructor querystringT.Destroy();
 begin
     if qsKeys <> nil then qsKeys.Destroy();
     if qsValues <> nil then qsValues.Destroy();
-    if json <> nil then json.Destroy();
     inherited Destroy();
 end;
 

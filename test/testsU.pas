@@ -1,7 +1,5 @@
 ﻿unit testsU;
 
-{$I ../modules/dunitx/Source/DUnitX.Stacktrace.inc}
-
 interface
 
 uses
@@ -12,55 +10,74 @@ type
     [TestFixture]
     querystringTestT = class
         [Test]
-        [TestCase('Case 1', '../../test-empty.http,../../test-empty.json,true')]
-        [TestCase('Case 2', '../../test-malformed.http,../../test-malformed.json,true')]
-        [TestCase('Case 3', '../../test-random1.http,../../test-random1.json,true')]
-        [TestCase('Case 4', '../../test-random2.http,../../test-random2.json,true')]
-        [TestCase('Case 5', '../../test-random3.http,../../test-random3.json,true')]
-        [TestCase('Case 6', '../../test-full.http,../../test-full.json,true')]
-        [TestCase('Case 7', '../../test-single.http,../../test-single.json,false')]
-        [TestCase('Case 8', '../../test-simple.http,../../test-simple.json,false')]
-        [TestCase('Case 9', '../../test-empty-value.http,../../test-empty-value.json,false')]
+        [TestCase('Case 2: test-malformed',   '../../test-malformed.http,../../test-malformed.json,true')]
+        [TestCase('Case 3: test-random1',     '../../test-random1.http,../../test-random1.json,true')]
+        [TestCase('Case 4: test-random2',     '../../test-random2.http,../../test-random2.json,true')]
+        [TestCase('Case 5: test-random3',     '../../test-random3.http,../../test-random3.json,true')]
+        [TestCase('Case 6: test-full',        '../../test-full.http,../../test-full.json,true')]
+        [TestCase('Case 7: test-single',      '../../test-single.http,../../test-single.json,false')]
+        [TestCase('Case 8: test-simple',      '../../test-simple.http,../../test-simple.json,false')]
+        [TestCase('Case 9: test-empty-value', '../../test-empty-value.http,../../test-empty-value.json,false')]
         procedure toJsonTest(querystringFile: string; expectedJsonFile: string; parse: string);
-        
-        [Test]
-        [TestCase('Case 1', ':/?#[]@!$&''()*+;=% ,%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25%20,Encoding all URI special chars,true')]
-        procedure percentEncodingTest(input: string; expected: string; msg: string; isuri: string);
-
-        [TestCase('Case 1', '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25%20,:/?#[]@!$&''()*+;=% ,Decoding from all URI special chars,true')]
-        [TestCase('Case 2', '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25+,:/?#[]@!$&''()*+;=% ,Decoding from all URI special chars with + symbol for application/x-www-form-urlencoded,false')]
-        procedure percentDecodingTest(input: string; expected: string; msg: string; isuri: string);
 
         [Test]
-        [TestCase('Case null 1', 'null,0')]
-        [TestCase('Case null 2', ',0')]
-        [TestCase('Case bool 1', 'true,1')]
-        [TestCase('Case bool 2', 'false,1')]
-        [TestCase('Case integer 1', '+2132,2')]
-        [TestCase('Case integer 2', '-242421,2')]
-        [TestCase('Case integer 3', '0,2')]
-        [TestCase('Case integer 4', '-0,2')]
-        [TestCase('Case integer 5', '+0,2')]
-        [TestCase('Case integer 6', '2147483647,2')]
-        [TestCase('Case integer 7', '2147483648,4')]
-        [TestCase('Case float 1', '-0.3E+4,3')]
-        [TestCase('Case float 2', '-435.3324E-12,3')]
-        [TestCase('Case float 3', '-.3545e+32,3')]
-        [TestCase('Case float 4', '+.3545e-32,3')]
-        [TestCase('Case float 5', '+059094.3545e-32,3')]
-        [TestCase('Case float 6', '+05903545e-32,3')]
-        [TestCase('Case float 7', '0.432,3')]
-        [TestCase('Case float 8', '.432,3')]
-        [TestCase('Case float 9', '0.432e454,3')]
-        [TestCase('Case float 10', '0.432e+4,3')]
-        [TestCase('Case float 11', '.432E54,3')]
-        [TestCase('Case string 1', '0.432+454,4')]
-        [TestCase('Case string 2', '.,4')]
-        [TestCase('Case string 3', '-,4')]
-        [TestCase('Case string 4', '+,4')]
-        [TestCase('Case string 5', '}1G.t8;T_F$WSH*#j*@[>jw Z#=Vrv&UfR8&36O0Z~%a[xC1#Y,4')]
-        [TestCase('Case string 6', '%Gb#21HIX%ZkKfEe8Kk_kVcN:d!"bJLZ\+gmc)=)U!2{mO#ES.,4')]
-        [TestCase('Case string 7', '3P7RhyY=*2n "^}tn|$h0ZPx@Z8yo0Y;*Kn!|)b|5G^J}q4Y/=,4')]
+        [TestCase('Case 0: test-malformed',   'false,../../test-malformed.json,../../test-malformed.http,false,false')]
+        [TestCase('Case 1: test-random1',     'false,../../test-random1.json,../../test-random1.http,false,false')]
+        [TestCase('Case 2: test-random2',     'false,../../test-random2.json,../../test-random2.http,false,false')]
+        [TestCase('Case 3: test-random3',     'true,../../test-random3.json,../../test-random3.http,false,false')]
+        [TestCase('Case 4: test-full',        'true,../../test-full.json,../../test-full.http,true,false')]
+        [TestCase('Case 5: test-single',      'true,../../test-single.json,../../test-single.http,false,false')]
+        [TestCase('Case 6: test-simple',      'true,../../test-simple.json,../../test-simple.http,false,false')]
+        [TestCase('Case 7: test-empty-value', 'false,../../test-empty-value.json,../../test-empty-value.http,false,false')]
+        procedure toQuerystringTest(areequal: string; jsonFile: string; expectedQuerystringFile: string; encode: string; printNull: string);
+    end;
+
+    [TestFixture]
+    httpUtilsTestT = class
+        [Test]
+        [TestCase('Case 1: Encoding all URI special chars', ':/?#[]@!$&''()*+;=% ,%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25%20,true')]
+        [TestCase('Case 2: Fuzz test', '}1G.t8;T_F$WSH*#j*@[>jw Z#=Vrv&UfR8&36O0Z~%a[xC1#Y,%7D1G.t8%3BT_F%24WSH%2A%23j%2A%40%5B%3Ejw%20Z%23%3DVrv%26UfR8%2636O0Z~%25a%5BxC1%23Y,true')]
+        [TestCase('Case 3: Fuzz test', '%Gb#21HIX%ZkKfEe8Kk_kVcN:d!"bJLZ\+gmc)=)U!2{mO#ES.,%25Gb%2321HIX%25ZkKfEe8Kk_kVcN%3Ad%21%22bJLZ%5C%2Bgmc%29%3D%29U%212%7BmO%23ES.,true')]
+        [TestCase('Case 4: Fuzz test', '3P7RhyY=*2n "^}tn|$h0ZPx@Z8yo0Y;*Kn!|)b|5G^J}q4Y/=,3P7RhyY%3D%2A2n%20%22%5E%7Dtn%7C%24h0ZPx%40Z8yo0Y%3B%2AKn%21%7C%29b%7C5G%5EJ%7Dq4Y%2F%3D,true')]
+        procedure percentEncodingTest(input: string; expected: string; isuri: string);
+
+        [TestCase('Case 0: Decoding from all URI special chars',                                                        '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25%20,:/?#[]@!$&''()*+;=% ,true')]
+        [TestCase('Case 1: Decoding from all URI special chars with + symbol for application/x-www-form-urlencoded',    '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%3B%3D%25+,:/?#[]@!$&''()*+;=% ,false')]
+        [TestCase('Case 2: Fuzz test', '%7D1G.t8%3BT_F%24WSH*%23j*%40%5B%3Ejw%20Z%23%3DVrv%26UfR8%2636O0Z~%25a%5BxC1%23Y,}1G.t8;T_F$WSH*#j*@[>jw Z#=Vrv&UfR8&36O0Z~%a[xC1#Y,true')]
+        [TestCase('Case 3: Fuzz test', '%25Gb%2321HIX%25ZkKfEe8Kk_kVcN%3Ad%21%22bJLZ%5C%2Bgmc)%3D)U%212%7BmO%23ES.,%Gb#21HIX%ZkKfEe8Kk_kVcN:d!"bJLZ\+gmc)=)U!2{mO#ES.,true')]
+        [TestCase('Case 4: Fuzz test', '3P7RhyY%3D*2n%20%22%5E%7Dtn%7C%24h0ZPx%40Z8yo0Y%3B*Kn%21%7C)b%7C5G%5EJ%7Dq4Y%2F%3D,3P7RhyY=*2n "^}tn|$h0ZPx@Z8yo0Y;*Kn!|)b|5G^J}q4Y/=,true')]
+        procedure percentDecodingTest(input: string; expected: string; isuri: string);
+
+        [Test]
+        [TestCase('Case 0: null', 'null,0')]
+        [TestCase('Case 1: null', ',0')]
+        [TestCase('Case 2: bool', 'true,1')]
+        [TestCase('Case 3: bool', 'false,1')]
+        [TestCase('Case 4: integer', '+2132,2')]
+        [TestCase('Case 5: integer', '-242421,2')]
+        [TestCase('Case 6: integer', '0,2')]
+        [TestCase('Case 7: integer', '-0,2')]
+        [TestCase('Case 8: integer', '+0,2')]
+        [TestCase('Case 9: integer', '2147483647,2')]
+        [TestCase('Case 10: integer', '2147483648,4')]
+        [TestCase('Case 11: float', '-0.3E+4,3')]
+        [TestCase('Case 12: float', '-435.3324E-12,3')]
+        [TestCase('Case 13: float', '-.3545e+32,3')]
+        [TestCase('Case 14: float', '+.3545e-32,3')]
+        [TestCase('Case 15: float', '+059094.3545e-32,3')]
+        [TestCase('Case 16: float', '+05903545e-32,3')]
+        [TestCase('Case 17: float', '0.432,3')]
+        [TestCase('Case 18: float', '.432,3')]
+        [TestCase('Case 19: float', '0.432e454,3')]
+        [TestCase('Case 20: float', '0.432e+4,3')]
+        [TestCase('Case 21: float', '.432E54,3')]
+        [TestCase('Case 22: string', '0.432+454,4')]
+        [TestCase('Case 23: string', '.,4')]
+        [TestCase('Case 24: string', '-,4')]
+        [TestCase('Case 25: string', '+,4')]
+        [TestCase('Case 26: Fuzz', '}1G.t8;T_F$WSH*#j*@[>jw Z#=Vrv&UfR8&36O0Z~%a[xC1#Y,4')]
+        [TestCase('Case 27: Fuzz', '%Gb#21HIX%ZkKfEe8Kk_kVcN:d!"bJLZ\+gmc)=)U!2{mO#ES.,4')]
+        [TestCase('Case 28: Fuzz', '3P7RhyY=*2n "^}tn|$h0ZPx@Z8yo0Y;*Kn!|)b|5G^J}q4Y/=,4')]
         procedure parseJsonValueTest(value: string; tp: string);
     end;
 
@@ -70,9 +87,46 @@ implementation
 
 uses
     querystringU,
+    httpUtilsU,
     System.Classes,
     System.SysUtils,
-    System.IOUtils;
+    System.IOUtils,
+    System.JSON;
+
+procedure querystringTestT.toQuerystringTest(areequal: string; jsonFile: string; expectedQuerystringFile: string; encode: string; printNull: string);
+var
+    qs: querystringT;
+    query: string;
+    querystringRes: string;
+    querystring: string;
+    i: integer;
+begin
+    var encodebool: boolean := encode.compareTo('true') = 0;
+    var printNullbool: boolean := printNull.compareTo('true') = 0;
+    var areeq: boolean := areequal.compareTo('true') = 0;
+
+    try
+        query := TFile.ReadAllText(jsonFile);
+        querystringRes := TFile.ReadAllText(expectedQuerystringFile);
+
+        qs := querystringT.Create();
+        qs.parseJson(query, printNullbool);
+
+        querystring := qs.toQuerystring(encodebool);
+
+        if areeq then
+            Assert.AreEqual(querystringRes, querystring)
+        else
+            Assert.AreNotEqual(querystringRes, querystring);
+        
+        qs.Destroy();
+    except
+        on E: exception do
+        begin
+            raise Exception.Create('Error toQuerystring() for file: ' + jsonFile + '. Exception: ' + E.Message);
+        end;
+    end;
+end;
 
 procedure querystringTestT.toJsonTest(querystringFile: string; expectedJsonFile: string; parse: string);
 var
@@ -82,14 +136,14 @@ var
     json: string;
     i: integer;
 begin
-
     var parsebool: boolean := parse.compareTo('true') = 0;
 
     try
         query := TFile.ReadAllText(querystringFile);
         jsonRes := TFile.ReadAllText(expectedJsonFile);
 
-        qs := querystringT.Create(query);
+        qs := querystringT.Create();
+        qs.parseQuerystring(query);
 
         json := qs.toJson(parsebool,parsebool,parsebool,parsebool);
 
@@ -104,32 +158,32 @@ begin
     end;
 end;
 
-procedure querystringTestT.percentEncodingTest(input: string; expected: string; msg: string; isuri: string);
+procedure httpUtilsTestT.percentEncodingTest(input: string; expected: string; isuri: string);
 begin
     var uri: boolean := isuri.compareTo('true') = 0; 
     try
-        Assert.AreEqual(expected, querystringT.percentEncode(input, uri),msg);
+        Assert.AreEqual(expected, httpUtilsT.percentEncode(input, uri));
     except
         on E: exception do raise;
     end;
 end;
 
-procedure querystringTestT.percentDecodingTest(input: string; expected: string; msg: string; isuri: string);
+procedure httpUtilsTestT.percentDecodingTest(input: string; expected: string; isuri: string);
 begin
     var uri: boolean := isuri.compareTo('true') = 0; 
     try
-        Assert.AreEqual(expected, querystringT.percentDecode(input, uri),msg);
+        Assert.AreEqual(expected, httpUtilsT.percentDecode(input, uri));
     except
         on E: exception do raise;
     end;
 end;
 
-procedure querystringTestT.parseJsonValueTest(value: string; tp: string);
+procedure httpUtilsTestT.parseJsonValueTest(value: string; tp: string);
 begin
     var res: jsonValueT;
     var resEx: jsonValueTypeEnum := jsonValueTypeEnum(strtoint(tp));
 
-    res := querystringT.parseJsonValue(value);
+    res := httpUtilsT.parseJsonValue(value);
 
     Assert.AreEqual(resEx, res.jsonType);
 end;
@@ -175,4 +229,5 @@ end;
 
 initialization
     TDUnitX.RegisterTestFixture(querystringTestT);
+    TDUnitX.RegisterTestFixture(httpUtilsTestT);
 end.
