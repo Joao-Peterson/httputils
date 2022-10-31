@@ -6,6 +6,6 @@
 	"mainsrc": "./",
 	"projects": [],
 	"dependencies": {
-		"https://github.com/joao-peterson/dunitx": "^v0.3.1"
+		"lab.srssistemas.com/peterson/dunitx": "^v0.3.2"
 	}
 }
