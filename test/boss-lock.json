@@ -4,8 +4,8 @@
 	"installedModules": {
 		"https://github.com/joao-peterson/dunitx": {
 			"name": "dunitx",
-			"version": "v0.3.1",
-			"hash": "5dbb0e027446c5e1a3bca95a2a1f32b7",
+			"version": "master",
+			"hash": "7417e7a61d8e151a1d627fc19ee6a512",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
