@@ -42,7 +42,7 @@ $ boss install github.com/Joao-Peterson/httputils
 If asked for permission, you can login with your gitlab credentials. **(must be done in powershell or cmd with administrator mode)**
 ```console
 $ boss login
-> Url to login (ex: github.com): lab.srssistemas.com
+> Url to login (ex: github.com): github.com
 > Use SSH(y or n):
 > n
 > Username: your_username
